@@ -24,8 +24,12 @@ def quaternion_average(a: torch.Tensor) -> torch.Tensor:
     a = a.view(-1, 4, 1)
 
     eigen_values, eigen_vectors = torch.matmul(a, a.transpose(1, 2)).mean(dim=0).eig(True)
+    
+    out = eigen_vectors[:, eigen_values.argmax(0)[0]].view(1, 4)
+    # handle the antipodal configuration
+    out[out[:, 3] < 0] = -1 * out[out[:, 3] < 0]
 
-    return eigen_vectors[:, eigen_values.argmax(0)[0]].view(1, 4)
+    return out
 
 
 def weighted_quaternion_average(a: torch.Tensor, w: torch.Tensor) -> torch.Tensor:
@@ -48,4 +52,9 @@ def weighted_quaternion_average(a: torch.Tensor, w: torch.Tensor) -> torch.Tenso
     eigen_values, eigen_vectors = torch.matmul(a.mul(w.view(-1, 1, 1)), a.transpose(1, 2)).sum(dim=0).div(w.sum()).eig(
         True)
 
-    return eigen_vectors[:, eigen_values.argmax(0)[0]].view(1, 4)
+    out = eigen_vectors[:, eigen_values.argmax(0)[0]].view(1, 4)
+    # handle the antipodal configuration
+    out[out[:, 3] < 0] = -1 * out[out[:, 3] < 0]
+
+    return out
+
